@@ -61,11 +61,12 @@ class partition_shifter():
 
     def __init__(self, sample_number):
         self.parts={}
+        self.tshifts=[]
+        self.tweights=[]
+
         self.parts_ratio=self.parts_sampling[sample_number]
         self.gen_partition_doublets()
 
-        self.tshifts=[]
-        self.tweights=[]
 
 
     def gen_partition_doublets(self):
