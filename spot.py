@@ -263,18 +263,20 @@ class RandomSpot(Spot):
         self.set_intensity(intensity)
 
             
-    def rand_timing(self):
+    def rand_timing(self,resolution = 10):
+        #randomize timing with resolution (default is 10ms)
         #TODO: check that timing is nested list [[a,b],[c,d]]
         onsetBounds=self.timing_bounds[0]
         durBounds=self.timing_bounds[1]
-        
-        onset = randint(onsetBounds[0],onsetBounds[1])
-        onset = int(10 * round(float(onset)/10)) #round to nearest multiple of 10
-        
-        dur=randint(durBounds[0],durBounds[1])
-        dur = int(10 * round(float(dur)/10)) #round to nearest multiple of 10
-        
-               
+
+        #===randomize onset===
+        onset_choices = range(onsetBounds[0],onsetBounds[1]+1,resolution)
+        onset = choice(onset_choices)
+
+        #===randomize duration===
+        dur_choices = range(durBounds[0],durBounds[1]+1,resolution)
+        dur = choice(dur_choices)
+
         self.set_timing([onset,onset+dur])
 
     def rand_xy(self):
