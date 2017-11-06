@@ -54,8 +54,6 @@ class partition_shifter():
     
     
 
-    tshifts=[]
-    tweights=[]
 
     target_t = [10,50,90,130,170,210]
     old_target = [(10, 90), (50, 130),(90, 170), (130, 210), (170, 250), (210, 290)]
@@ -65,7 +63,9 @@ class partition_shifter():
         self.parts={}
         self.parts_ratio=self.parts_sampling[sample_number]
         self.gen_partition_doublets()
-        print self.parts_ratio
+
+        self.tshifts=[]
+        self.tweights=[]
 
 
     def gen_partition_doublets(self):

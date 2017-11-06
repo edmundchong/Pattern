@@ -22,7 +22,7 @@ class Spot:
         elif self.rig=='ALP':
             self.Im_dim = [56,80]
             self.array_dim = [768,1024]
-            self.offset = [340,458]
+            self.offset = [340,457]
             self.scaling = [1.0, 1.0]
         else:
             raise ValueError('Rigname ' + rig +' not recognized')
