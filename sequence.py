@@ -109,7 +109,11 @@ class Sequence:
         for n,frame in zip(frame_n,self.seq):
             self.ALP_seq = self.ALP_seq + [frame]*n
 
-    
+    def createRandomSpot(self,xy_is_rand,timing_is_rand,intensity_is_rand):
+        spot_obj = spot.RandomSpot(self.rig,xy_is_rand,timing_is_rand,intensity_is_rand)
+
+        return spot_obj
+
     def create_xy_seq(self,spots,spotsizes,timing,intensities,grouptimes,rand_args,isProbe,rig,label=''):
         """
         takes list of spot coordinates e.g.[[a1,a2],[b1,b2]]
@@ -120,7 +124,7 @@ class Sequence:
         """
         min_spacing = 0
         spotlist=[]
-        
+
         if len(grouptimes)!=len(spots):
             grouptimes=[[]]*len(spots)
         self.rand_args=rand_args
@@ -152,7 +156,7 @@ class Sequence:
                 intensity_is_rand=False
             
             if xy_is_rand or timing_is_rand or intensity_is_rand:
-                spot_obj = spot.RandomSpot(rig,xy_is_rand,timing_is_rand,intensity_is_rand)
+                spot_obj = self.createRandomSpot(xy_is_rand,timing_is_rand,intensity_is_rand)
     
                 if xy_is_rand:
                     spot_obj.init_xy(size,min_spacing)
@@ -178,21 +182,14 @@ class Sequence:
                 spot_obj.set_intensity(this_intensity)
             
             spotlist.append(spot_obj)
-        
+
         self.spotlist = spotlist
         self.isProbe = isProbe
         self.label = label
-        
+
         if (self.rand_args['omit'] > 0) or (self.rand_args['replace'] > 0):
             self.isRandomSequence = True
             self.original_spotlist = deepcopy(spotlist) #create copy for omission/replacement later
-
-        if any(isinstance(i,spot.RandomSpot) for i in spotlist):
-            self.isRandomSequence = True
-            self.randomize()
-        else:
-            self.update()
-        
 
         if self.rand_args['scramble'] == 1:
             self.isRandomSequence = True
@@ -202,7 +199,13 @@ class Sequence:
             self.original_spotlist = deepcopy(spotlist) #create copy for timing rand later
             sample_number = self.rand_args['randt']
             self.shifter = time_shifter.partition_shifter(sample_number)
-        
+
+        if any(isinstance(i,spot.RandomSpot) for i in spotlist):
+            self.isRandomSequence = True
+            self.randomize()
+        else:
+            self.update()
+
     def create_im_seq(self,spots,timing,intensities,grouptimes,isProbe,rig,label=''):
         spotlist=[]
         for ptn,this_timing,this_intensity in zip(spots,timing,intensities):
@@ -224,11 +227,9 @@ class Sequence:
             else:
                 intensity_is_rand=False
             
-            
-            
-            
+
             if timing_is_rand:
-                spot_obj = spot.RandomSpot(rig,xy_is_rand,timing_is_rand,intensity_is_rand)
+                spot_obj = self.createRandomSpot(xy_is_rand,timing_is_rand,intensity_is_rand)
                 spot_obj.timing_bounds=this_timing
             else:
                 spot_obj = spot.Spot(rig,)
@@ -351,14 +352,13 @@ class Sequence:
            
             randomSpots=[]
         
-            rig=self.rig
             for s in new_spotlist[0:nreplace]:
                 xy=s.xy #copy non-spatial (except size) characteristics of spot to be replaced
                 gridsize=s.gridsize
                 timing=s.timing
                 intensity=s.intensity
-                
-                newspot = spot.RandomSpot(rig,xy_is_rand=1,timing_is_rand=0,intensity_is_rand=0)
+
+                newspot = self.createRandomSpot(xy_is_rand=1,timing_is_rand=0,intensity_is_rand=0)
                 newspot.init_xy(gridsize=gridsize,min_spacing=0)
                 newspot.set_timing(timing)
                 newspot.set_intensity(intensity)
@@ -368,21 +368,12 @@ class Sequence:
             self.spotlist=deepcopy(new_spotlist)
 
 
-        for this_spot in self.spotlist:
-        
-            if isinstance(this_spot, spot.RandomSpot):
-                this_spot.excluded_spots=trial_excluded_spots
-                this_spot.randomize()
-            
-            #add new random spot to excluded spots list to avoid repeats
-            trial_excluded_spots=np.vstack([trial_excluded_spots,this_spot.xy])
-            
-        
+        self.rand_xy(trial_excluded_spots)
+
         #set intensity to the same across all spots (take first spot)
         intensity = self.spotlist[0].intensity
         for this_spot in self.spotlist:
             this_spot.set_intensity(intensity)
-        
 
         #set timing groups
         group_timings = {}
@@ -431,7 +422,19 @@ class Sequence:
                 s.timing = new_t
 
         self.update()
-        
+
+    def rand_xy(self,trial_excluded_spots):
+        for this_spot in self.spotlist:
+
+            if isinstance(this_spot, spot.RandomSpot):
+                this_spot.excluded_spots=trial_excluded_spots
+                this_spot.randomize()
+
+            #add new random spot to excluded spots list to avoid repeats
+            trial_excluded_spots=np.vstack([trial_excluded_spots,this_spot.xy])
+
+
+
     def randomize_ephys(self):
         if (self.rand_args['omit'] > 0) or (self.rand_args['replace'] > 0):
             self.spotlist = deepcopy(self.original_spotlist)
@@ -606,7 +609,50 @@ class Sequence:
         self.calc_TTL()
         
         #self.image_seq()
-        
+
+class Sequence2(Sequence):
+    def __init__(self,spots,timing,isProbe,rig,spotsizes=[],label='', mode='grid', intensities=[],grouptimes=[],rand_args={}):
+        self.rand_spotlist=[]
+        Sequence.__init__(self,
+                          spots=spots,
+                          timing=timing,
+                          isProbe=isProbe,
+                          rig=rig,
+                          spotsizes=spotsizes,
+                          label=label,
+                          mode=mode,
+                          intensities=intensities,
+                          grouptimes=grouptimes,
+                          rand_args=rand_args)
+
+
+
+    #call RandomSpot2 instead of RandomSpot, randomization by spotlist
+    def createRandomSpot(self,xy_is_rand,timing_is_rand,intensity_is_rand):
+        spot_obj = spot.RandomSpot2(self.rig,xy_is_rand,timing_is_rand,intensity_is_rand)
+
+        return spot_obj
+
+    def rand_xy(self,foo):
+        trial_rand_spotlist=deepcopy(self.rand_spotlist)
+        for this_spot in self.spotlist:
+            if isinstance(this_spot, spot.RandomSpot2):
+                if len(trial_rand_spotlist) == 0:
+                    print 'Not enough spots in randomize xy list. Error'
+                    trial_rand_spotlist=[(0,0)]
+
+                this_spot.rand_spotlist=trial_rand_spotlist
+                this_spot.randomize()
+
+            #remove decided spot from random list, to avoid repeats
+            thisxy = tuple(this_spot.xy)
+            if thisxy in trial_rand_spotlist:
+                trial_rand_spotlist.remove(thisxy)
+            else:
+                print 'WARNING! Randomized spot not from spotlist. How???'
+
+
+
 def create_empty_seq(rig):
     #empty pattern stimulation: just create a spot of 0 duration (dirty)
     spots = [[0,0]]

@@ -39,8 +39,8 @@ class Spot:
         #transform to pixel size
         height=max(np.floor(gridsize * height_scale), 1) #must be >0
         width=max(np.floor(gridsize * width_scale), 1) #must be >0
-        
-        y_max = np.floor(self.Im_dim[0] / height) #number of spots in one (image) column but (projected image) row        
+
+        y_max = np.floor(self.Im_dim[0] / height) #number of spots in one (image) column but (projected image) row
         x_max = np.floor(self.Im_dim[1] / width) #number of spots in one (image) row but (projected image) column
         
         x_max= int(x_max - 1) #zero-indexing
@@ -193,7 +193,6 @@ class Spot:
 class RandomSpot(Spot):
     xy_is_rand = False
     excluded_spots=np.array([[-99,-99]]) #should be np array
-    included_spots=[]
     
     min_spacing = -99 #minimum euclidean distance that random spots should be from excluded spots
                       #distance measured in spots (e.g. 1 means 1 spot length) 
@@ -233,19 +232,6 @@ class RandomSpot(Spot):
         else:
             self.set_intensity(self.intensity)
             
-            
-    def randomize_ephys(self):
-
-        if self.xy_is_rand:
-            self.rand_xy_ephys()
-        if self.timing_is_rand:
-            self.rand_timing()
-        
-        
-        if self.intensity_is_rand:
-            self.rand_intensity()
-        else:
-            self.set_intensity(self.intensity)            
 
     def rand_intensity(self):
         
@@ -307,12 +293,17 @@ class RandomSpot(Spot):
                 
         self.xy=[new_spots[0,0], new_spots[0,1]]
         self.set_xy(self.xy,self.gridsize)
-        
-    def rand_xy_ephys(self):
-        if self.gridsize==0:
-            raise ValueError('ERROR: **SET GRIDSIZE FIRST!**')
-                
-        self.xy=choice(self.included_spots)
-        self.set_xy(self.xy,self.gridsize)     
 
-        
+
+class RandomSpot2(RandomSpot):
+        #rand_xy by selection from pre-defined list
+        def __init__(self,rig,xy_is_rand,timing_is_rand,intensity_is_rand):
+            RandomSpot.__init__(self,rig,xy_is_rand,timing_is_rand,intensity_is_rand)
+            self.rand_spotlist=[]
+
+        def rand_xy(self):
+            if self.gridsize==0:
+                raise ValueError('ERROR: **SET GRIDSIZE FIRST!**')
+
+            self.xy=choice(self.rand_spotlist)
+            self.set_xy(self.xy,self.gridsize)
