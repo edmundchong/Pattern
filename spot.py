@@ -37,8 +37,8 @@ class Spot:
         width_scale=self.scaling[1]
     
         #transform to pixel size
-        height=np.floor(gridsize * height_scale)
-        width=np.floor(gridsize * width_scale)
+        height=max(np.floor(gridsize * height_scale), 1) #must be >0
+        width=max(np.floor(gridsize * width_scale), 1) #must be >0
         
         y_max = np.floor(self.Im_dim[0] / height) #number of spots in one (image) column but (projected image) row        
         x_max = np.floor(self.Im_dim[1] / width) #number of spots in one (image) row but (projected image) column
