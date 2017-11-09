@@ -3,7 +3,6 @@ from PIL import Image, ImageFont, ImageDraw
 import numpy as np
 import matplotlib.pyplot as plt
 import spot
-from wx import FONTSIZE_LARGE
 from random import shuffle, choice
 import time_shifter
 
