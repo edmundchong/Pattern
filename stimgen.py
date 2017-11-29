@@ -17,7 +17,7 @@ from listquote import LineParser
 #import cv2
 
 from matplotlib import rcParams
-from statsmodels.stats.tests.results.results_power import pwr_chisquare
+
 if rcParams['backend.qt4']!='PyQt4':
     raise ValueError('matplotlib.rcParams[\'backend.qt4\'] should be = PyQt4. Edit matplotlibrc file')  
 
