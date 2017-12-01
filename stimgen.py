@@ -525,7 +525,7 @@ class CalibrationViewer(QtGui.QMainWindow):
             for i in range(self.spot_select.count()):
                 self.spot_select.item(i).setSelected(True)
 
-
+            self.rig = sess['pre']['rig']
 
 
         else:
@@ -540,6 +540,9 @@ class CalibrationViewer(QtGui.QMainWindow):
 
 
     def _rand_xy(self,(x_max,y_max),spacing, ref_spots=np.array([-99,-99])):
+        if self.rig == 'ALP2':
+            return self._rand_xy_offset(spacing,ref_spots)
+
         #pick random x,y coordinate to define non-overlapping spots
         #spacing: minimum euclidean distance between spots, measured by number of spots
         #e.g. 1 means spots cannot be above, below, left, or right, but can be diagonal [distance = sqrt(2)]
@@ -556,6 +559,31 @@ class CalibrationViewer(QtGui.QMainWindow):
         for j in range(max_loop):
             x=randint(0,x_max)
             y=randint(0,y_max)
+            euclid_dist=np.sqrt(np.sum((ref_spots-[x,y])**2,1))
+            if euclid_dist.min() > spacing:
+                new_spot=[x,y]
+                break
+            elif j==max_loop-1:
+                raise ValueError('max iterations reached, no possible spot found')
+
+        return new_spot
+
+    def _rand_xy_offset(self,spacing, ref_spots=np.array([-99,-99])):
+        #for ALP2. grid does not start from (0,0)
+
+        if self.rig !='ALP2':
+            raise ValueError('Inappropriate randomization for rig'+str(self.rig))
+
+        if ref_spots.shape==(2L,):
+            ref_spots=ref_spots.reshape(1L,2L) #if only one spot, need to reshape for concatenation later
+
+        new_spot=[]#container holding all spot values, initialized to -99 (to avoid affecting distance calc)
+
+        max_loop=10000
+
+        for j in range(max_loop):
+            x=randint(self.grid[0][0],self.grid[0][1])
+            y=randint(self.grid[1][0],self.grid[1][1])
             euclid_dist=np.sqrt(np.sum((ref_spots-[x,y])**2,1))
             if euclid_dist.min() > spacing:
                 new_spot=[x,y]
@@ -750,6 +778,10 @@ class CalibrationViewer(QtGui.QMainWindow):
 
         #==calculate grid x_max and y_max==
         s=spot.Spot(sess['pre']['rig'])
+
+        if sess['pre']['rig']=='ALP2':
+            self.grid = self.spots['grid']
+
         self.gridmax=s.get_grid_max(sess['pre']['gridsize'])
         self.DMD_dim = s.Im_dim
 
@@ -1357,16 +1389,20 @@ class CalibrationViewer(QtGui.QMainWindow):
             return
 
         #===check if spots are within grid===
-        xbounds=[0,self.gridmax[0]]
-        ybounds=[0,self.gridmax[1]]
+        if self.rig=='ALP2':
+            xbounds = self.grid[0]
+            ybounds = self.grid[1]
+        else:
+            xbounds=[0,self.gridmax[0]]
+            ybounds=[0,self.gridmax[1]]
         x=retrievedValues['x']
         y=retrievedValues['y']
 
         if xbounds[0] <= x <= xbounds[1] and ybounds[0] <= y <= ybounds[1]:
             pass
         else:
-            message = 'Spots are not within x max:' + str(xbounds[1])+\
-                      ' and y max: ' + str(ybounds[1])
+            message = 'Spots are not within x:' + str(xbounds)+\
+                      ' and y: ' + str(ybounds)
             msgBox.setText(message)
             msgBox.exec_()
             return
@@ -1625,7 +1661,9 @@ class CalibrationViewer(QtGui.QMainWindow):
         self.spot_disp_canvas.draw()
                                  
     def _plot_grid(self,spots_on=[]):
-        """spots_on: str([[a,b],[c,d]])"""
+        if self.rig=='ALP2':
+            self._plot_grid_offset(spots_on)
+            return
 
         self.ax_spot_disp.clear()
         self.ax_spot_disp.axis('off')
@@ -1692,6 +1730,99 @@ class CalibrationViewer(QtGui.QMainWindow):
                 spots_on=filter(lambda a: a != 'R', spots_on)
                 
                     
+
+        #==turn on spots==
+        for s in spots_on:
+
+            spot_list_key=str(self.spots['list'][s])
+            spot_list[spot_list_key].set_facecolor([1,0,0])
+            spot_list[spot_list_key].set_fill(True)
+
+            #==label==
+            box=spot_list[spot_list_key].get_bbox()
+            xpos=(box.x0+box.x1)/2
+            ypos=(box.y0+box.y1)/2
+
+            self.ax_spot_disp.annotate(s, (xpos, ypos), color='black', weight='bold',
+                                    ha='center', va='center',fontsize=20)
+
+
+
+
+        #==reset axis limits==
+        self.ax_spot_disp.set_xlim([x_start-spacing,x+spacing])
+        self.ax_spot_disp.set_ylim([y_start-spacing,y+spacing])
+
+        self.spot_disp_canvas.draw()
+
+    def _plot_grid_offset(self,spots_on):
+        if self.rig != 'ALP2':
+            raise ValueError('Inappropriate plotting for rig type '+str(self.rig))
+
+        self.ax_spot_disp.clear()
+        self.ax_spot_disp.axis('off')
+        x_coord=range(self.grid[0][0],self.grid[0][1]+1)
+        x_coord.reverse() #x coordinate is flipped because the plot starts from bottom to top
+
+        y_coord=range(self.grid[1][0],self.grid[1][1]+1)
+
+
+        spot_size=0.1
+        spacing = 0.1 * spot_size
+
+        x_start=0.1
+        y_start=0.1
+        x=x_start
+        y=y_start
+
+        spot_list={}
+        for xlabel in x_coord:
+            x=x_start
+            for ylabel in y_coord:
+                handle = self.ax_spot_disp.add_patch(
+                    patches.Rectangle(
+                        (x, y),
+                        spot_size,
+                        spot_size,
+                        fill=None
+                    )
+                )
+
+                coords=str([xlabel,ylabel])
+                spot_list[coords]=handle
+                x=x+spacing+spot_size
+
+
+
+            y=y+spacing+spot_size
+
+
+        if 'R' in spots_on:
+            if self.spots['list']['R']==['random']:
+                #turn entire grid green, then turn the non-random spots white.
+                spots_off = self.spots['list'].keys()
+
+                for s in spot_list:
+                    spot_list[s].set_facecolor([0,0.4,0])
+                    spot_list[s].set_fill(True)
+
+                spots_on=filter(lambda a: a != 'R', spots_on)
+                spots_off=filter(lambda a: a != 'R', spots_off)
+
+                for s in spots_off:
+                    spot_list_key=str(self.spots['list'][s])
+                    spot_list[spot_list_key].set_facecolor([1,1,1])
+            elif isinstance(self.spots['list']['R'][0],tuple):
+
+                #nested list of spots. ephys, where random spots are explicit
+                for s in self.spots['list']['R']:
+                    spot_list_key=str(list(s))
+                    spot_list[spot_list_key].set_facecolor([1,0.65,0])
+                    spot_list[spot_list_key].set_fill(True)
+
+                spots_on=filter(lambda a: a != 'R', spots_on)
+
+
 
         #==turn on spots==
         for s in spots_on:
