@@ -49,6 +49,12 @@ class Sequence:
             self.array_dim = [768,1024]
             self.offset = [340,458]
             self.scaling = [1.0, 1.0]
+        elif self.rig=='ALP2':
+            self.Im_dim = [768,1024]
+            self.array_dim = [768,1024]
+            self.offset = [0,0]
+            self.scaling = [1.0, 1.0]
+            
         else:
             raise ValueError('Rigname ' + rig +' not recognized')
         
