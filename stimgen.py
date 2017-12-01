@@ -481,7 +481,7 @@ class CalibrationViewer(QtGui.QMainWindow):
         if self.fn:
             with open(self.fn) as f:
                 [sess_list,spots]=pickle.load(f)
-                
+
             if 'emulation' not in spots: #maintain backward compatibility
                 spots['emulation']=False
                 
@@ -525,7 +525,6 @@ class CalibrationViewer(QtGui.QMainWindow):
             for i in range(self.spot_select.count()):
                 self.spot_select.item(i).setSelected(True)
 
-            self.rig = sess['pre']['rig']
 
 
         else:
@@ -724,13 +723,15 @@ class CalibrationViewer(QtGui.QMainWindow):
         #==get session index + other info==
         idx = self.sess_select.currentRow()
         self.session_id=idx
-        
+
         try:
             sess=self.sess_list[self.session_id]
         except:
             print 'session list index error, probably innocuous: could be during deletion of session'
             return
-        
+
+        self.rig=sess['pre']['rig']
+
         for p in sess['patterns']:
             if 'defn' not in sess['patterns'][p]:
                 sess['patterns'][p]={'defn':sess['patterns'][p].copy()}
