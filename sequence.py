@@ -199,11 +199,22 @@ class Sequence:
         if self.rand_args['scramble'] == 1:
             self.isRandomSequence = True
 
+        if sum(np.array(self.rand_args.values())>0) > 1:
+            raise ValueError('More than one rand arg initialized. Check '+self.label)
+
         if self.rand_args['randt'] > 0: #select different partitions by randt param
             self.isRandomSequence = True
             self.original_spotlist = deepcopy(spotlist) #create copy for timing rand later
             sample_number = self.rand_args['randt']
             self.shifter = time_shifter.partition_shifter(sample_number)
+
+        if self.rand_args['randdur'] > 0: #select different partitions rand dur schemes
+            self.isRandomSequence = True
+            self.original_spotlist = deepcopy(spotlist) #create copy for timing rand later
+            scheme_number = self.rand_args['randdur']
+            self.shifter = time_shifter.duration_shifter(scheme_number)
+
+
 
         if any(isinstance(i,spot.RandomSpot) for i in spotlist):
             self.isRandomSequence = True
@@ -272,7 +283,12 @@ class Sequence:
             border_width = 1
             textsize = 10
             textpos = (4,2)
-        
+        elif self.rig == 'ALP2':
+            border_width = 1
+            textsize = 10
+            textpos = (4,2)
+
+
         border_color = 127
         font = ImageFont.truetype("arial.ttf", textsize)
         #font = ImageFont.truetype("/Library/Fonts/Arial Narrow.ttf", textsize) #for MacOSX
@@ -336,7 +352,8 @@ class Sequence:
         return img        
 
     def randomize(self):
-        if (self.rand_args['omit'] > 0) or (self.rand_args['replace'] > 0) or (self.rand_args['randt'] > 0):
+        if (self.rand_args['omit'] > 0) or (self.rand_args['replace'] > 0) or \
+                (self.rand_args['randt'] > 0) or (self.rand_args['randdur'] > 0):
             self.spotlist = deepcopy(self.original_spotlist)
             
         if not self.isRandomSequence:
@@ -417,6 +434,17 @@ class Sequence:
 
         #randomize timing distance
         if self.rand_args['randt'] > 0:
+            shift_map=self.shifter.get_shift_map()
+
+            for s in self.spotlist:
+
+                old_t = tuple(s.timing)
+                new_t = shift_map[old_t]
+                print old_t,new_t
+                s.timing = new_t
+
+        #randomize duration
+        if self.rand_args['randdur'] > 0:
             shift_map=self.shifter.get_shift_map()
 
             for s in self.spotlist:
@@ -565,6 +593,7 @@ class Sequence:
     
     def update(self):
         """
+
         mode -- grid: spots in grid mode, have to be converted to pixels
                 pix: spots in pixel mode   
         """
@@ -669,7 +698,7 @@ def create_empty_seq(rig):
 
     rand_args = {} #initialize dictionary of global sequence parameters
     #
-    for p in ['omit','replace','scramble','randt']:
+    for p in ['omit','replace','scramble','randt','randdur']:
         rand_args[p]=0
 
     seq = Sequence(spots = spots,

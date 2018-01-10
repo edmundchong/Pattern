@@ -143,3 +143,28 @@ class partition_shifter():
             shift_map[t_old]=t_new
 
         return shift_map
+
+class duration_shifter():
+    old_target = [(10, 90), (50, 130),(90, 170), (130, 210), (170, 250), (210, 290)]
+
+    shift_types={1:[-40,-60,+40,+60]} #extend or reduce duration without changing onset
+
+    def __init__(self,shift_scheme):
+        self.shift_scheme = shift_scheme
+        self.shift_list = self.shift_types[shift_scheme]
+
+    def get_shift_map(self):
+        shift_map={}
+        for t in self.old_target:
+            shift_map[t]=t
+
+        old_t=choice(shift_map.keys())
+        shift=choice(self.shift_list)
+        new_t=(old_t[0],old_t[1]+shift)
+
+        shift_map[old_t]=new_t
+        return shift_map
+
+
+
+
