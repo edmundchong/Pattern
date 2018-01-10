@@ -82,7 +82,7 @@ def get_pattern_params(spotlist,ptn,sessNow):
     grouptimes=[]
     
     rand_args = {} #initialize dictionary of global sequence parameters
-    for p in ['omit','replace','scramble','randt']:
+    for p in ['omit','replace','scramble','randt','randdur']:
         rand_args[p]=0    
     
     if 'empty' in ptn:
