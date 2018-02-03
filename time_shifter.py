@@ -160,7 +160,7 @@ class duration_shifter():
 
         old_t=choice(shift_map.keys())
         shift=choice(self.shift_list)
-        new_t=(old_t[0],old_t[1]+shift)
+        new_t=[old_t[0],old_t[1]+shift]
 
         shift_map[old_t]=new_t
         return shift_map
