@@ -89,7 +89,9 @@ class partition_shifter():
         nSpots=6
         maxSingleShift = 4
 
-        for shift in range(2,9):
+        shift_max = max(self.parts_ratio.keys())
+
+        for shift in range(2,shift_max/2 + 1):
             parts[shift*2]=[]
             for x in lex_partitions(shift):
 
