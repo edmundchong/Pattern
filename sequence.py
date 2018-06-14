@@ -33,7 +33,9 @@ class Sequence:
     
     def __init__(self,spots,timing,isProbe,rig,spotsizes=[],label='', mode='grid', intensities=[],grouptimes=[],rand_args={}):
         self.rig=rig
-
+        self.tstart = 0
+        self.tend = 0
+        
         if len(intensities)==0:
             for i in range(len(spots)):
                 intensities.append(255)
@@ -641,6 +643,17 @@ class Sequence:
         self.seq=seq
         self.frame_switches=frame_switches
         self.calc_TTL()
+        
+        #calculate the timing onset and offset of pattern
+        all_timing = [s.timing for s in self.spotlist]
+        all_onsets = [t[0] for t in all_timing]
+        all_offsets = [t[1] for t in all_timing]
+        all_onsets.sort()
+        all_offsets.sort()
+        
+        self.tstart = all_onsets[0]
+        self.tend = all_offsets[-1]
+        
         
         #self.image_seq()
 
