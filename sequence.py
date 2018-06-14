@@ -208,7 +208,12 @@ class Sequence:
             self.isRandomSequence = True
             self.original_spotlist = deepcopy(spotlist) #create copy for timing rand later
             sample_number = self.rand_args['randt']
-            self.shifter = time_shifter.partition_shifter(sample_number)
+
+            old_target=[tuple(s.timing) for s in self.original_spotlist]
+            old_target.sort()
+
+            self.shifter = time_shifter.partition_shifter(sample_number, old_target)
+
 
         if self.rand_args['randdur'] > 0: #select different partitions rand dur schemes
             self.isRandomSequence = True
@@ -292,8 +297,8 @@ class Sequence:
 
 
         border_color = 127
-        font = ImageFont.truetype("arial.ttf", textsize)
-        #font = ImageFont.truetype("/Library/Fonts/Arial Narrow.ttf", textsize) #for MacOSX
+        #font = ImageFont.truetype("arial.ttf", textsize)
+        font = ImageFont.truetype("/Library/Fonts/Arial Narrow.ttf", textsize) #for MacOSX
 
 
         for frame, timestamp in zip(self.seq, self.frame_switches):
