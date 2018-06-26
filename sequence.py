@@ -35,7 +35,7 @@ class Sequence:
         self.rig=rig
         self.tstart = 0
         self.tend = 0
-        
+
         if len(intensities)==0:
             for i in range(len(spots)):
                 intensities.append(255)
@@ -221,6 +221,10 @@ class Sequence:
             scheme_number = self.rand_args['randdur']
             self.shifter = time_shifter.duration_shifter(scheme_number)
 
+        if self.rand_args['randxyt'] > 0: #replace and shift
+            self.isRandomSequence = True
+            self.original_spotlist = deepcopy(spotlist)
+
 
 
         if any(isinstance(i,spot.RandomSpot) for i in spotlist):
@@ -360,7 +364,8 @@ class Sequence:
 
     def randomize(self):
         if (self.rand_args['omit'] > 0) or (self.rand_args['replace'] > 0) or \
-                (self.rand_args['randt'] > 0) or (self.rand_args['randdur'] > 0):
+                (self.rand_args['randt'] > 0) or (self.rand_args['randdur'] > 0) or \
+                (self.rand_args['randxyt'] > 0):
             self.spotlist = deepcopy(self.original_spotlist)
             
         if not self.isRandomSequence:
@@ -461,6 +466,9 @@ class Sequence:
                 print old_t,new_t
                 s.timing = new_t
 
+        if self.rand_args['randxyt'] == 1:
+            self.rand_xyt_small()
+
         self.update()
 
     def rand_xy(self,trial_excluded_spots):
@@ -472,6 +480,83 @@ class Sequence:
 
             #add new random spot to excluded spots list to avoid repeats
             trial_excluded_spots=np.vstack([trial_excluded_spots,this_spot.xy])
+
+
+    def rand_xyt_small(self):
+        #pick a few spots to randomize xy and time
+
+        #general parameters
+        p_dist = {'replace': {1:0.6, 2:0.3, 3:0.1},
+                  'shift':   {1:0.6, 2:0.3, 3:0.1} }
+
+        #timing parameters
+        shift_range = [-80, 80]
+        shift_resolution = 20
+        onset_range = [0,500]
+
+
+
+        self.spotlist = deepcopy(self.original_spotlist)
+
+        #=== determine which spots to replace or shift ===
+        nspots = len(self.spotlist)
+
+        spot_indices = range(nspots)
+
+        #first determine how many to replace, and to shift
+        n = {}
+        for probetype in p_dist:
+            n[probetype] = np.random.choice(p_dist[probetype].keys(), 1,
+                                            p = p_dist[probetype].values())[0]
+        total_perturb = np.sum(n.values())
+        if total_perturb > nspots:
+            raise ValueError('Trying to perturb ' +str(total_perturb)
+                             +' spots, but only ' + str(nspots) + ' spots available!!!')
+
+        #get indices of spots to perturb
+        probe_indices = {}
+        for probetype in n:
+            this_indices = np.random.choice(spot_indices, n[probetype], replace = False)
+            probe_indices[probetype] = list(this_indices)
+            spot_indices = list(set(spot_indices) - set(this_indices)) #update list
+
+
+        #=== spot replacement ===
+        for i in probe_indices['replace']:
+            s = self.spotlist[i]
+
+            #grab params of spot to be replaced
+            gridsize=s.gridsize
+            timing=s.timing
+            intensity=s.intensity
+
+
+            newspot = self.createRandomSpot(xy_is_rand=1,timing_is_rand=0,intensity_is_rand=0)
+            newspot.init_xy(gridsize=gridsize,min_spacing=0)
+            newspot.set_timing(timing)
+            newspot.set_intensity(intensity)
+
+            self.spotlist[i] = newspot
+
+        self.rand_xy(0) #passed param is unused. just for backwards compat
+
+        #=== spot shift ===
+        for i in probe_indices['shift']:
+            shift_possibles = range(shift_range[0],shift_range[1]+1,shift_resolution)
+
+            timing = self.spotlist[i].timing
+
+            #restrict range of possible shifts
+            a=(timing[0] + np.array(shift_possibles)) >= onset_range[0]
+            b=(timing[0] + np.array(shift_possibles)) <= onset_range[1]
+            shift_bool = a & b
+            shift_possibles = np.array(shift_possibles)[shift_bool]
+
+            shift = np.random.choice(shift_possibles,1)[0]
+
+
+            for j,foo in enumerate(timing):
+                timing[j] += shift
 
 
 
@@ -648,18 +733,18 @@ class Sequence:
         self.seq=seq
         self.frame_switches=frame_switches
         self.calc_TTL()
-        
+
         #calculate the timing onset and offset of pattern
         all_timing = [s.timing for s in self.spotlist]
         all_onsets = [t[0] for t in all_timing]
         all_offsets = [t[1] for t in all_timing]
         all_onsets.sort()
         all_offsets.sort()
-        
+
         self.tstart = all_onsets[0]
         self.tend = all_offsets[-1]
-        
-        
+
+
         #self.image_seq()
 
 class Sequence2(Sequence):
@@ -701,7 +786,8 @@ class Sequence2(Sequence):
             if thisxy in trial_rand_spotlist:
                 trial_rand_spotlist.remove(thisxy)
             else:
-                print 'WARNING! Randomized spot not from spotlist. How???'
+                pass
+                #print 'WARNING! Randomized spot not from spotlist. How???'
 
 
 
@@ -716,7 +802,7 @@ def create_empty_seq(rig):
 
     rand_args = {} #initialize dictionary of global sequence parameters
     #
-    for p in ['omit','replace','scramble','randt','randdur']:
+    for p in ['omit','replace','scramble','randt','randdur','randxyt']:
         rand_args[p]=0
 
     seq = Sequence(spots = spots,

@@ -382,6 +382,17 @@ class CalibrationViewer(QtGui.QMainWindow):
         generic_box.setTitle('randdur')
         spot_grouping_layout2.addWidget(generic_box)
 
+        self.sequence_randxyt=QtGui.QLineEdit()
+        self.sequence_randxyt.setStatusTip("Randomize x,y,t.")
+        generic_box= QtGui.QGroupBox()
+        generic_layout=QtGui.QVBoxLayout()
+        generic_box.setLayout(generic_layout)
+        generic_layout.addWidget(self.sequence_randxyt)
+        generic_box.setTitle('randxyt')
+        spot_grouping_layout2.addWidget(generic_box)
+
+
+
         spot_grouping_layout2.setSpacing(0)
 
 
@@ -816,7 +827,8 @@ class CalibrationViewer(QtGui.QMainWindow):
                                        self.sequence_replace,
                                        self.sequence_scramble,
                                        self.sequence_randt,
-                                       self.sequence_randdur]
+                                       self.sequence_randdur,
+                                       self.sequence_randxyt]
 
         input_params['setEditable'] = [self.pattern_select]
 
@@ -862,6 +874,7 @@ class CalibrationViewer(QtGui.QMainWindow):
             self.sequence_scramble.returnPressed.connect(self._sequence_global_changed)
             self.sequence_randt.returnPressed.connect(self._sequence_global_changed)
             self.sequence_randdur.returnPressed.connect(self._sequence_global_changed)
+            self.sequence_randxyt.returnPressed.connect(self._sequence_global_changed)
 
             
 
@@ -1342,7 +1355,7 @@ class CalibrationViewer(QtGui.QMainWindow):
         self._plot_timing()
         
         
-        params = {'omit':0,'replace':0,'scramble':0,'randt':0,'randdur':0}
+        params = {'omit':0,'replace':0,'scramble':0,'randt':0,'randdur':0,'randxyt':0}
         for p in params:
             if p in sess['patterns'][pattern]:
                 params[p] = sess['patterns'][pattern][p]
@@ -1352,6 +1365,7 @@ class CalibrationViewer(QtGui.QMainWindow):
         self.sequence_scramble.setText(str(params['scramble']))
         self.sequence_randt.setText(str(params['randt']))
         self.sequence_randdur.setText(str(params['randdur']))
+        self.sequence_randxyt.setText(str(params['randxyt']))
 
 
     def _option_value_changed(self):
@@ -1450,7 +1464,8 @@ class CalibrationViewer(QtGui.QMainWindow):
                          'replace': int(self.sequence_replace.text()),
                          'scramble': int(self.sequence_scramble.text()),
                          'randt': int(self.sequence_randt.text()),
-                         'randdur': int(self.sequence_randdur.text())}
+                         'randdur': int(self.sequence_randdur.text()),
+                         'randxyt': int(self.sequence_randxyt.text())}
         
         pattern=str(self.pattern_select.currentText())
         for param, newValue in retrievedValues.items():
