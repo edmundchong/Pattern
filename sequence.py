@@ -551,10 +551,14 @@ class Sequence:
             #restrict range of possible shifts
             a=(timing[0] + np.array(shift_possibles)) >= onset_range[0]
             b=(timing[0] + np.array(shift_possibles)) <= onset_range[1]
-            shift_bool = a & b
+            c = np.array(shift_possibles) != 0 #non-zero shift
+
+            shift_bool = a & b & c
             shift_possibles = np.array(shift_possibles)[shift_bool]
             shift = np.random.choice(shift_possibles,1)[0]
 
+            #if shift==0:
+            #    print 'ZERO'
 
             for j,foo in enumerate(timing):
                 timing[j] += shift
