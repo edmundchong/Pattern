@@ -467,7 +467,7 @@ class Sequence:
                 s.timing = new_t
 
         if self.rand_args['randxyt'] == 1:
-            self.rand_xyt_small()
+            self.rand_xyt_small(trial_excluded_spots)
 
         self.update()
 
@@ -482,7 +482,7 @@ class Sequence:
             trial_excluded_spots=np.vstack([trial_excluded_spots,this_spot.xy])
 
 
-    def rand_xyt_small(self):
+    def rand_xyt_small(self,trial_excluded_spots):
         #pick a few spots to randomize xy and time
 
         #general parameters
@@ -520,7 +520,6 @@ class Sequence:
             probe_indices[probetype] = list(this_indices)
             spot_indices = list(set(spot_indices) - set(this_indices)) #update list
 
-
         #=== spot replacement ===
         for i in probe_indices['replace']:
             s = self.spotlist[i]
@@ -538,7 +537,8 @@ class Sequence:
 
             self.spotlist[i] = newspot
 
-        self.rand_xy(0) #passed param is unused. just for backwards compat
+        self.rand_xy(trial_excluded_spots) #passed param is unused for sequence2. just for backwards compat
+
 
         #=== spot shift ===
         for i in probe_indices['shift']:
@@ -546,18 +546,18 @@ class Sequence:
 
             timing = self.spotlist[i].timing
 
+
+
             #restrict range of possible shifts
             a=(timing[0] + np.array(shift_possibles)) >= onset_range[0]
             b=(timing[0] + np.array(shift_possibles)) <= onset_range[1]
             shift_bool = a & b
             shift_possibles = np.array(shift_possibles)[shift_bool]
-
             shift = np.random.choice(shift_possibles,1)[0]
 
 
             for j,foo in enumerate(timing):
                 timing[j] += shift
-
 
 
     def randomize_ephys(self):
