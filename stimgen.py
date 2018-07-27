@@ -32,7 +32,7 @@ except ImportError:
     def jit(a):
         return a
 '''
-__author__ = 'chris+edmund'
+__author__ = 'edmund'
 
 LIST_ITEM_ENABLE_FLAG = QtCore.Qt.ItemFlag(QtCore.Qt.ItemIsSelectable + QtCore.Qt.ItemIsEnabled +
                                            QtCore.Qt.ItemIsDragEnabled + QtCore.Qt.ItemIsUserCheckable)  # 57
@@ -343,7 +343,18 @@ class CalibrationViewer(QtGui.QMainWindow):
         generic_box.setLayout(generic_layout)
         generic_layout.addWidget(self.sequence_replace)
         generic_box.setTitle('Sub')
-        spot_grouping_layout.addWidget(generic_box)        
+        spot_grouping_layout.addWidget(generic_box)
+
+
+        self.sequence_meanT=QtGui.QLineEdit()
+        self.sequence_meanT.setStatusTip("Define mean timing.")
+        generic_box= QtGui.QGroupBox()
+        generic_layout=QtGui.QVBoxLayout()
+        generic_box.setLayout(generic_layout)
+        generic_layout.addWidget(self.sequence_meanT)
+        generic_box.setTitle('meanT')
+        spot_grouping_layout.addWidget(generic_box)
+
 
         spot_grouping_layout.setSpacing(0)
 
@@ -825,6 +836,7 @@ class CalibrationViewer(QtGui.QMainWindow):
                                        self.spot_grouptime,
                                        self.sequence_omit,
                                        self.sequence_replace,
+                                       self.sequence_meanT,
                                        self.sequence_scramble,
                                        self.sequence_randt,
                                        self.sequence_randdur,
@@ -871,6 +883,7 @@ class CalibrationViewer(QtGui.QMainWindow):
             
             self.sequence_omit.returnPressed.connect(self._sequence_global_changed)
             self.sequence_replace.returnPressed.connect(self._sequence_global_changed)
+            self.sequence_meanT.returnPressed.connect(self._sequence_global_changed)
             self.sequence_scramble.returnPressed.connect(self._sequence_global_changed)
             self.sequence_randt.returnPressed.connect(self._sequence_global_changed)
             self.sequence_randdur.returnPressed.connect(self._sequence_global_changed)
@@ -1355,13 +1368,14 @@ class CalibrationViewer(QtGui.QMainWindow):
         self._plot_timing()
         
         
-        params = {'omit':0,'replace':0,'scramble':0,'randt':0,'randdur':0,'randxyt':0}
+        params = {'omit':0,'replace':0,'meanT':0,'scramble':0,'randt':0,'randdur':0,'randxyt':0}
         for p in params:
             if p in sess['patterns'][pattern]:
                 params[p] = sess['patterns'][pattern][p]
         
         self.sequence_omit.setText(str(params['omit']))
         self.sequence_replace.setText(str(params['replace']))
+        self.sequence_meanT.setText(str(params['meanT']))
         self.sequence_scramble.setText(str(params['scramble']))
         self.sequence_randt.setText(str(params['randt']))
         self.sequence_randdur.setText(str(params['randdur']))
@@ -1462,6 +1476,7 @@ class CalibrationViewer(QtGui.QMainWindow):
         #parameters applying to entire sequence
         retrievedValues={'omit': int(self.sequence_omit.text()),
                          'replace': int(self.sequence_replace.text()),
+                         'meanT': int(self.sequence_meanT.text()),
                          'scramble': int(self.sequence_scramble.text()),
                          'randt': int(self.sequence_randt.text()),
                          'randdur': int(self.sequence_randdur.text()),

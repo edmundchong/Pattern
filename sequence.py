@@ -465,9 +465,17 @@ class Sequence:
                 new_t = shift_map[old_t]
                 print old_t,new_t
                 s.timing = new_t
-
+        #randomize xy and also t
         if self.rand_args['randxyt'] == 1:
             self.rand_xyt_small(trial_excluded_spots)
+
+        #add constant timing shift to all terms
+        if self.rand_args['meanT'] > 0:
+            meanT = self.rand_args['meanT']
+
+            for s in self.spotlist:
+                s.timing[0] += meanT
+                s.timing[1] += meanT
 
         self.update()
 
