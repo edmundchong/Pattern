@@ -202,7 +202,10 @@ class Sequence:
             self.isRandomSequence = True
 
         if sum(np.array(self.rand_args.values())>0) > 1:
-            raise ValueError('More than one rand arg initialized. Check '+self.label)
+            if self.rand_args['meanT'] != 0 :
+                print 'Multiple rand args initialized, with meanT', self.rand_args['meanT']
+            else:
+                raise ValueError('More than one rand arg initialized. Check '+self.label)
 
         if self.rand_args['randt'] > 0: #select different partitions by randt param
             self.isRandomSequence = True
