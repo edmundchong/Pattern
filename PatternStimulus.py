@@ -63,6 +63,39 @@ class Odor():
 
         nitrogen=int(odorparams[2])
         self.flow=[1000-nitrogen, nitrogen]
+        
+        
+class OdorMixtureOneEmpty():
+    #given string for one odor, but in 2MFC setup (so the other odor is dummy)
+    def __init__(self,textstr,cassette_map):
+        odorparams=textstr.split('_')
+
+        odor=odorparams[0]
+        
+        liq_dilution=float(odorparams[1])
+        nitrogen=int(odorparams[2])
+
+        self.name = [None,None]
+        self.liq_dilution = [0,0]
+        self.flow = [[0,0],[0,0]]
+
+        #put odor in correct mfc cassette
+        mfc_i = cassette_map[odor]
+        
+        self.name[mfc_i] = odor
+        self.name[1-mfc_i] = None
+        
+        self.liq_dilution[mfc_i] = liq_dilution
+        self.liq_dilution[1-mfc_i] = 0
+               
+        self.flow[mfc_i] = [500-nitrogen, 100]
+        self.flow[1-mfc_i] = [400,100]
+
+
+
+
+
+    
 
 class OdorMixture():
     #format of string:

@@ -812,7 +812,7 @@ def create_empty_seq(rig):
     timing = [[0,0]]
     isProbe = 0
     label = 'DMDoff'
-    spotsizes = [10]
+    spotsizes = [1]
     intensities = [255]
 
     rand_args = {} #initialize dictionary of global sequence parameters
