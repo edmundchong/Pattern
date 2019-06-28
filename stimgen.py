@@ -513,7 +513,7 @@ class CalibrationViewer(QtGui.QMainWindow):
     @QtCore.pyqtSlot()
     def _openAction_triggered(self):
         filedialog = QtGui.QFileDialog(self)
-        startpath = 'C:/voyeur_rig_config/'
+        startpath = 'F:/ss_config/'
         self.fn = filedialog.getOpenFileName(self, "Select a data file.", startpath, "pickle (*.pickle)", "", QtGui.QFileDialog.DontUseNativeDialog)
         #self.fn='template.pickle'
         self.setWindowTitle(self.fn)
