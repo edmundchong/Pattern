@@ -2333,6 +2333,7 @@ class StimListWidget(QtGui.QListWidget):
         super(StimListWidget, self).__init__()
         self.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self.stimtype = stimtype #'target','nontarget','probe'
+        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.LeftButton:
             super(StimListWidget, self).mousePressEvent(event)
